@@ -153,7 +153,9 @@
 #define _ACAPPS
 
 #ifdef ACPI_USE_STANDARD_HEADERS
+#if !defined(MOLLENOS)
 #include <sys/stat.h>
+#endif
 #endif /* ACPI_USE_STANDARD_HEADERS */
 
 /* Common info for tool signons */

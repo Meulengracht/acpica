@@ -265,7 +265,7 @@ AcpiUtConvertDecimalString (
     {
         /* Character must be ASCII 0-9, otherwise terminate with no error */
 
-        if (!isdigit (*String))
+        if (!isdigit ((int)(*String & 0xFF)))
         {
            break;
         }
@@ -321,7 +321,7 @@ AcpiUtConvertHexString (
     {
         /* Must be ASCII A-F, a-f, or 0-9, otherwise terminate with no error */
 
-        if (!isxdigit (*String))
+        if (!isxdigit ((int)(*String & 0xFF)))
         {
             break;
         }

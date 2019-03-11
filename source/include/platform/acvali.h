@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * Module Name: utuuid -- UUID support functions
+ * Name: acvali.h - OS specific defines, etc. for Vali
  *
  *****************************************************************************/
 
@@ -149,63 +149,169 @@
  *
  *****************************************************************************/
 
-#include "acpi.h"
-#include "accommon.h"
+#ifndef __ACVALI_H__
+#define __ACVALI_H__
 
-#define _COMPONENT          ACPI_COMPILER
-        ACPI_MODULE_NAME    ("utuuid")
+#include <os/osdefs.h>
 
+#define ACPI_USE_STANDARD_HEADERS
+#define ACPI_USE_SYSTEM_CLIBRARY
 
-#if (defined ACPI_ASL_COMPILER || defined ACPI_EXEC_APP || defined ACPI_HELP_APP || defined ACPI_LIBRARY)
-/*
- * UUID support functions.
- *
- * This table is used to convert an input UUID ascii string to a 16 byte
- * buffer and the reverse. The table maps a UUID buffer index 0-15 to
- * the index within the 36-byte UUID string where the associated 2-byte
- * hex value can be found.
- *
- * 36-byte UUID strings are of the form:
- *     aabbccdd-eeff-gghh-iijj-kkllmmnnoopp
- * Where aa-pp are one byte hex numbers, made up of two hex digits
- *
- * Note: This table is basically the inverse of the string-to-offset table
- * found in the ACPI spec in the description of the ToUUID macro.
- */
-const UINT8    AcpiGbl_MapToUuidOffset[UUID_BUFFER_LENGTH] =
-{
-    6,4,2,0,11,9,16,14,19,21,24,26,28,30,32,34
-};
+typedef struct acpi_os_semaphore_info {
+    uint16_t                MaxUnits;
+    uint16_t                CurrentUnits;
+    void                   *OsHandle;
+} ACPI_OS_SEMAPHORE_INFO;
+#define ACPI_OS_MAX_SEMAPHORES 256
+#define ACPI_OS_DEBUG_TIMEOUT 10000
 
+#if defined(LIBC_KERNEL)
+#define ACPI_USE_NATIVE_DIVIDE
+#define ACPI_USE_NATIVE_MATH64
 
-/*******************************************************************************
- *
- * FUNCTION:    AcpiUtConvertStringToUuid
- *
- * PARAMETERS:  InString            - 36-byte formatted UUID string
- *              UuidBuffer          - Where the 16-byte UUID buffer is returned
- *
- * RETURN:      None. Output data is returned in the UuidBuffer
- *
- * DESCRIPTION: Convert a 36-byte formatted UUID string to 16-byte UUID buffer
- *
- ******************************************************************************/
+#define ACPI_MACHINE_WIDTH __BITS
 
-void
-AcpiUtConvertStringToUuid (
-    char                    *InString,
-    UINT8                   *UuidBuffer)
-{
-    UINT32                  i;
-
-
-    for (i = 0; i < UUID_BUFFER_LENGTH; i++)
-    {
-        UuidBuffer[i] = (AcpiUtAsciiCharToHex (
-            InString[AcpiGbl_MapToUuidOffset[i]]) << 4);
-
-        UuidBuffer[i] |= AcpiUtAsciiCharToHex (
-            InString[AcpiGbl_MapToUuidOffset[i] + 1]);
-    }
-}
+#ifdef __OSCONFIG_ACPIDEBUG
+#define ACPI_DEBUGGER
 #endif
+
+#ifdef __OSCONFIG_ACPIDEBUGMUTEXES
+#define ACPI_MUTEX_DEBUG
+#endif
+
+#ifdef __OSCONFIG_REDUCEDHARDWARE
+#define ACPI_REDUCED_HARDWARE 1
+#endif
+
+#define ACPI_FLUSH_CPU_CACHE()  __asm {WBINVD}
+
+#if defined(amd64) || defined(__amd64__)
+#define ACPI_ACQUIRE_GLOBAL_LOCK(FacsPtr, Acq)  __asm \
+{                                                   \
+        __asm mov           rax, 0xFF               \
+        __asm mov           rcx, FacsPtr            \
+        __asm or            rcx, rcx                \
+        __asm jz            exit_acq                \
+        __asm lea           rcx, [rcx + 0x10]		\
+                                                    \
+        __asm acq10:                                \
+        __asm mov           rax, [rcx]              \
+        __asm mov           rdx, rax                \
+        __asm and           rdx, 0xFFFFFFFFFFFFFFFE \
+        __asm bts           rdx, 1                  \
+        __asm adc           rdx, 0                  \
+        __asm lock cmpxchg  qword ptr [rcx], rdx    \
+        __asm jnz           acq10                   \
+                                                    \
+        __asm cmp           dl, 3                   \
+        __asm sbb           rax, rax                \
+                                                    \
+        __asm exit_acq:                             \
+        __asm mov           Acq, al                 \
+}
+#define ACPI_RELEASE_GLOBAL_LOCK(FacsPtr, Pnd) __asm \
+{                                                   \
+        __asm xor           rax, rax                \
+        __asm mov           rcx, FacsPtr            \
+        __asm or            rcx, rcx                \
+        __asm jz            exit_rel                \
+        __asm lea           rcx, [rcx + 0x10]		\
+                                                    \
+        __asm Rel10:                                \
+        __asm mov           rax, [rcx]              \
+        __asm mov           rdx, rax                \
+        __asm and           rdx, 0xFFFFFFFFFFFFFFFC \
+        __asm lock cmpxchg  qword ptr [rcx], rdx    \
+        __asm jnz           Rel10                   \
+                                                    \
+        __asm cmp           dl, 3                   \
+        __asm and           rax, 1                  \
+                                                    \
+        __asm exit_rel:                             \
+        __asm mov           Pnd, al                 \
+}
+#elif defined(i386) || defined(__i386__)
+#define ACPI_ACQUIRE_GLOBAL_LOCK(FacsPtr, Acq)  __asm \
+{                                                   \
+        __asm mov           eax, 0xFF               \
+        __asm mov           ecx, FacsPtr            \
+        __asm or            ecx, ecx                \
+        __asm jz            exit_acq                \
+        __asm lea           ecx, [ecx + 0x10]		\
+                                                    \
+        __asm acq10:                                \
+        __asm mov           eax, [ecx]              \
+        __asm mov           edx, eax                \
+        __asm and           edx, 0xFFFFFFFE         \
+        __asm bts           edx, 1                  \
+        __asm adc           edx, 0                  \
+        __asm lock cmpxchg  dword ptr [ecx], edx    \
+        __asm jnz           acq10                   \
+                                                    \
+        __asm cmp           dl, 3                   \
+        __asm sbb           eax, eax                \
+                                                    \
+        __asm exit_acq:                             \
+        __asm mov           Acq, al                 \
+}
+#define ACPI_RELEASE_GLOBAL_LOCK(FacsPtr, Pnd) __asm \
+{                                                   \
+        __asm xor           eax, eax                \
+        __asm mov           ecx, FacsPtr            \
+        __asm or            ecx, ecx                \
+        __asm jz            exit_rel                \
+        __asm lea           ecx, [ecx + 0x10]		\
+                                                    \
+        __asm Rel10:                                \
+        __asm mov           eax, [ecx]              \
+        __asm mov           edx, eax                \
+        __asm and           edx, 0xFFFFFFFC         \
+        __asm lock cmpxchg  dword ptr [ecx], edx    \
+        __asm jnz           Rel10                   \
+                                                    \
+        __asm cmp           dl, 3                   \
+        __asm and           eax, 1                  \
+                                                    \
+        __asm exit_rel:                             \
+        __asm mov           Pnd, al                 \
+}
+#else
+#define ACPI_ACQUIRE_GLOBAL_LOCK(GLptr, Acq)
+#define ACPI_RELEASE_GLOBAL_LOCK(GLptr, Pnd)
+#endif //PLATFORM
+
+#else
+
+#ifdef ACPI_APPLICATION
+#define ACPI_ACQUIRE_GLOBAL_LOCK(GLptr, Acq)       if (AcpiGbl_GlobalLockPresent) {Acq = 0xFF;} else {Acq = 0;}
+#define ACPI_RELEASE_GLOBAL_LOCK(GLptr, Pnd)       if (AcpiGbl_GlobalLockPresent) {Pnd = 0xFF;} else {Pnd = 0;}
+#else
+
+#define ACPI_ACQUIRE_GLOBAL_LOCK(GLptr, Acq)
+
+#define ACPI_RELEASE_GLOBAL_LOCK(GLptr, Pnd)
+
+#endif
+#define ACPI_FLUSH_CPU_CACHE()
+#if defined(__ia64__) || defined(amd64) || (defined(__x86_64__) && !defined(__ILP32__)) ||\
+    defined(__aarch64__) || defined(__PPC64__) ||\
+    defined(__s390x__)
+#define ACPI_MACHINE_WIDTH          64
+#define COMPILER_DEPENDENT_INT64    long
+#define COMPILER_DEPENDENT_UINT64   unsigned long
+#else
+#define ACPI_MACHINE_WIDTH          32
+#define COMPILER_DEPENDENT_INT64    long long
+#define COMPILER_DEPENDENT_UINT64   unsigned long long
+#define ACPI_USE_NATIVE_DIVIDE
+#define ACPI_USE_NATIVE_MATH64
+#endif
+
+#ifndef __cdecl
+#define __cdecl
+#endif
+
+#endif //LIBC_KERNEL
+
+
+#endif //__ACVALI_H__
