@@ -55,11 +55,12 @@ static struct AcpiInterruptProxy {
     void*            Context;
 }             AcpiGbl_Interrupts[MAX_NUMBER_ACPI_INTS] = { { 0 } };
 static char   AcpiGbl_OutputBuffer[512]                = { 0 };
+static int    AcpiGbl_OutputIndex                      = 0;
 static void*  AcpiGbl_RedirectionTarget                = NULL;
 
-static SlimSemaphore_t          Semaphores[ACPI_OS_MAX_SEMAPHORES]          = { { 0 } };
-static ACPI_OS_SEMAPHORE_INFO   AcpiGbl_Semaphores[ACPI_OS_MAX_SEMAPHORES]  = { { 0 } };
-static int                      AcpiGbl_DebugTimeout                        = 0;
+static SlimSemaphore_t        Semaphores[ACPI_OS_MAX_SEMAPHORES]          = { { 0 } };
+static ACPI_OS_SEMAPHORE_INFO AcpiGbl_Semaphores[ACPI_OS_MAX_SEMAPHORES]  = { { 0 } };
+static int                    AcpiGbl_DebugTimeout                        = 0;
 
 static InterruptStatus_t
 AcpiInterruptEntry(
@@ -69,10 +70,10 @@ AcpiInterruptEntry(
     struct AcpiInterruptProxy* Proxy = (struct AcpiInterruptProxy*)Context;
     _CRT_UNUSED(ResourceTable);
     
-    if (Proxy->Handler(Proxy->Context) == ACPI_INTERRUPT_HANDLED) {
-        return InterruptHandled;        
+    if (Proxy->Handler(Proxy->Context) != ACPI_INTERRUPT_HANDLED) {
+        return InterruptNotHandled;
     }
-    return InterruptNotHandled;
+    return InterruptHandled; 
 }
 
 /******************************************************************************
@@ -755,15 +756,21 @@ AcpiOsVprintf (
     const char              *Format,
     va_list                 Args)
 {
-    // Temporary buffer
-	char Buffer[256] = { 0 };
+    char Buffer[256] = { 0 };
+    int  i           = 0;
     vsprintf(Buffer, Format, Args);
-    if (Buffer[0] == '\n') {
-        TRACE(&AcpiGbl_OutputBuffer[0]);
-        memset(&AcpiGbl_OutputBuffer[0], 0, sizeof(AcpiGbl_OutputBuffer));
-    }
-    else {
-        strcat(&AcpiGbl_OutputBuffer[0], &Buffer[0]);
+    
+    while (Buffer[i]) {
+        if (AcpiGbl_OutputIndex == sizeof(AcpiGbl_OutputBuffer) || Buffer[i] == '\n') {
+            WRITELINE(&AcpiGbl_OutputBuffer[0]);
+            memset(&AcpiGbl_OutputBuffer[0], 0, sizeof(AcpiGbl_OutputBuffer));
+            AcpiGbl_OutputIndex = 0;
+            if (Buffer[i] == '\n') {
+                i++;
+            }
+            continue;
+        }
+        AcpiGbl_OutputBuffer[AcpiGbl_OutputIndex++] = Buffer[i++];
     }
 }
 
