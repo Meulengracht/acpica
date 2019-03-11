@@ -563,13 +563,13 @@ AcpiOsWritePort (
     UINT32                  Width)
 {
     ACPI_FUNCTION_NAME(OsWritePort);
-    if (WriteDirectIo(DeviceIoPortBased, Address, DIVUP(Width, 8), Value) != OsSuccess) {
+    size_t OutValue = (size_t)(Value & 0xFFFFFFFF);
+    if (WriteDirectIo(DeviceIoPortBased, Address, DIVUP(Width, 8), OutValue) != OsSuccess) {
         ACPI_ERROR((AE_INFO, "Bad width parameter: %X", Width));
         return (AE_BAD_PARAMETER);
     }
     return (AE_OK);
 }
-
 
 /******************************************************************************
  *
@@ -592,10 +592,12 @@ AcpiOsReadMemory (
     UINT32                  Width)
 {
     ACPI_FUNCTION_NAME(AcpiOsReadMemory);
-    if (ReadDirectIo(DeviceIoMemoryBased, Address, DIVUP(Width, 8), (size_t*)Value) != OsSuccess) {
+    size_t InputValue;
+    if (ReadDirectIo(DeviceIoMemoryBased, Address, DIVUP(Width, 8), &InputValue) != OsSuccess) {
         ACPI_ERROR((AE_INFO, "Bad width parameter: %X", Width));
         return (AE_BAD_PARAMETER);
     }
+    *Value = (UINT64)InputValue;
     return (AE_OK);
 }
 
@@ -619,7 +621,8 @@ AcpiOsWriteMemory (
     UINT32                  Width)
 {
     ACPI_FUNCTION_NAME(AcpiOsWriteMemory);
-    if (WriteDirectIo(DeviceIoMemoryBased, Address, DIVUP(Width, 8), (size_t)Value) != OsSuccess) {
+    size_t OutValue = (size_t)Value;
+    if (WriteDirectIo(DeviceIoMemoryBased, Address, DIVUP(Width, 8), OutValue) != OsSuccess) {
         ACPI_ERROR((AE_INFO, "Bad width parameter: %X", Width));
         return (AE_BAD_PARAMETER);
     }
@@ -648,10 +651,12 @@ AcpiOsReadPciConfiguration (
     UINT32                  Width)
 {
     ACPI_FUNCTION_NAME(AcpiOsReadPciConfiguration);
-    if (ReadDirectPci(PciId->Bus, PciId->Device, PciId->Function, Reg, DIVUP(Width, 8), (size_t*)Value) != OsSuccess) {
+    size_t InputValue;
+    if (ReadDirectPci(PciId->Bus, PciId->Device, PciId->Function, Reg, DIVUP(Width, 8), &InputValue) != OsSuccess) {
         ACPI_ERROR((AE_INFO, "Bad width parameter: %X", Width));
         return (AE_BAD_PARAMETER);
     }
+    *Value = (UINT64)InputValue;
     return (AE_OK);
 }
 
@@ -677,7 +682,8 @@ AcpiOsWritePciConfiguration (
     UINT32                  Width)
 {
     ACPI_FUNCTION_NAME(AcpiOsWritePciConfiguration);
-    if (WriteDirectPci(PciId->Bus, PciId->Device, PciId->Function, Reg, DIVUP(Width, 8), (size_t)Value) != OsSuccess) {
+    size_t OutValue = (size_t)Value;
+    if (WriteDirectPci(PciId->Bus, PciId->Device, PciId->Function, Reg, DIVUP(Width, 8), OutValue) != OsSuccess) {
         ACPI_ERROR((AE_INFO, "Bad width parameter: %X", Width));
         return (AE_BAD_PARAMETER);
     }
@@ -748,7 +754,7 @@ AcpiOsVprintf (
  *****************************************************************************/
 void
 AcpiOsRedirectOutput (
-    void                    *Destination)
+    void *Destination)
 {
     AcpiGbl_RedirectionTarget = Destination;
 }
