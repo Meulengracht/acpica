@@ -24,7 +24,7 @@
 
 /* Includes
  * - (OS) System */
-#include <system/utils.h>
+#include <arch/utils.h>
 #include <debug.h>
 
 /* Includes

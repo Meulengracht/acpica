@@ -24,10 +24,10 @@
 
 /* Includes
  * - (OS) System */
-#include <system/thread.h>
-#include <system/utils.h>
-#include <system/time.h>
-#include <system/io.h>
+#include <arch/thread.h>
+#include <arch/utils.h>
+#include <arch/time.h>
+#include <arch/io.h>
 #include <semaphore_slim.h>
 #include <memoryspace.h>
 #include <interrupts.h>

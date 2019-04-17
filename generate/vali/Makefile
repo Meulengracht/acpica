@@ -12,9 +12,10 @@ ACPICA_OSL := $(ACPICA_SOURCE)/os_specific/service_layers
 # Include all the definitions for os
 include $(PROJECT_ROOT)/config/common.mk
 
-INCLUDES = -I$(PROJECT_ROOT)/kernel/include -I$(PROJECT_ROOT)/librt/include \
-		   -I$(PROJECT_ROOT)/librt/libc/include -I$(PROJECT_ROOT)/librt/libddk/include \
-		   -I$(PROJECT_ROOT)/librt/libds/include -I$(ACPICA_SOURCE)/include -I$(ACPICA_COMPILER)
+INCLUDES = -I$(PROJECT_ROOT)/kernel/arch/include -I$(PROJECT_ROOT)/kernel/include \
+		   -I$(PROJECT_ROOT)/librt/include -I$(PROJECT_ROOT)/librt/libc/include \
+		   -I$(PROJECT_ROOT)/librt/libddk/include -I$(PROJECT_ROOT)/librt/libds/include \
+		   -I$(ACPICA_SOURCE)/include -I$(ACPICA_COMPILER)
 
 SOURCES_COMMON = $(ACPICA_SOURCE)/common/ahids.c \
 				 $(ACPICA_SOURCE)/common/ahuuids.c
