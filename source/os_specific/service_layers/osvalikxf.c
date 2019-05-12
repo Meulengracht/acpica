@@ -28,7 +28,7 @@
 #include <arch/utils.h>
 #include <arch/time.h>
 #include <arch/io.h>
-#include <semaphore_slim.h>
+#include <semaphore.h>
 #include <memoryspace.h>
 #include <interrupts.h>
 #include <threading.h>
@@ -58,7 +58,7 @@ static char   AcpiGbl_OutputBuffer[512]                = { 0 };
 static int    AcpiGbl_OutputIndex                      = 0;
 static void*  AcpiGbl_RedirectionTarget                = NULL;
 
-static SlimSemaphore_t        Semaphores[ACPI_OS_MAX_SEMAPHORES]          = { { 0 } };
+static Semaphore_t            Semaphores[ACPI_OS_MAX_SEMAPHORES]          = { { 0 } };
 static ACPI_OS_SEMAPHORE_INFO AcpiGbl_Semaphores[ACPI_OS_MAX_SEMAPHORES]  = { { 0 } };
 static int                    AcpiGbl_DebugTimeout                        = 0;
 
@@ -276,7 +276,7 @@ AcpiOsSleep (
     UINT64 Milliseconds)
 {
     if (GetCurrentThreadForCore(ArchGetProcessorCoreId()) != NULL) {
-        SchedulerThreadSleep(NULL, (size_t)Milliseconds);
+        SchedulerSleep((size_t)Milliseconds);
     }
     else {
         AcpiOsStall(Milliseconds * 1000);
@@ -878,7 +878,7 @@ AcpiOsCreateSemaphore(
     }
 
     // Initialize the semaphore
-    SlimSemaphoreConstruct(&Semaphores[i], InitialUnits, MaxUnits);
+    SemaphoreConstruct(&Semaphores[i], InitialUnits, MaxUnits);
     AcpiGbl_Semaphores[i].MaxUnits      = (uint16_t) MaxUnits;
     AcpiGbl_Semaphores[i].CurrentUnits  = (uint16_t) InitialUnits;
     AcpiGbl_Semaphores[i].OsHandle      = &Semaphores[i];
@@ -902,16 +902,12 @@ AcpiOsCreateSemaphore(
  *****************************************************************************/
 ACPI_STATUS
 AcpiOsDeleteSemaphore(
-    ACPI_SEMAPHORE          Handle)
+    ACPI_SEMAPHORE Handle)
 {
-    // Variables
     UINT32 Index = (UINT32) Handle;
-
     if ((Index >= ACPI_OS_MAX_SEMAPHORES) || !AcpiGbl_Semaphores[Index].OsHandle) {
         return (AE_BAD_PARAMETER);
     }
-
-    SlimSemaphoreDestroy((SlimSemaphore_t*)AcpiGbl_Semaphores[Index].OsHandle);
     AcpiGbl_Semaphores[Index].OsHandle = NULL;
     return (AE_OK);
 }
@@ -935,10 +931,9 @@ AcpiOsWaitSemaphore(
     UINT32                  Units,
     UINT16                  Timeout)
 {
-    // Variables
-    int WaitStatus      = 0;
-    UINT32 Index        = (UINT32) Handle;
-    UINT32 OsTimeout    = Timeout;
+    UINT32     Index     = (UINT32) Handle;
+    UINT32     OsTimeout = Timeout;
+    OsStatus_t WaitStatus;
     ACPI_FUNCTION_ENTRY ();
 
     if ((Index >= ACPI_OS_MAX_SEMAPHORES) || !AcpiGbl_Semaphores[Index].OsHandle) {
@@ -962,10 +957,10 @@ AcpiOsWaitSemaphore(
         OsTimeout += 10;
     }
 
-    WaitStatus = SlimSemaphoreWait(
-        (SlimSemaphore_t*)AcpiGbl_Semaphores[Index].OsHandle, 
+    WaitStatus = SemaphoreWaitSimple(
+        (Semaphore_t*)AcpiGbl_Semaphores[Index].OsHandle, 
         OsTimeout);
-    if (WaitStatus == SCHEDULER_SLEEP_TIMEOUT) {
+    if (WaitStatus == OsTimeout) {
         if (AcpiGbl_DebugTimeout) {
             ACPI_EXCEPTION ((AE_INFO, AE_TIME,
                 "Debug timeout on semaphore 0x%04X (%ums)\n",
@@ -1002,7 +997,6 @@ AcpiOsSignalSemaphore(
     ACPI_SEMAPHORE          Handle,
     UINT32                  Units)
 {
-    // Variables
     UINT32 Index = (UINT32) Handle;
     ACPI_FUNCTION_ENTRY();
 
@@ -1031,7 +1025,7 @@ AcpiOsSignalSemaphore(
     }
 
     AcpiGbl_Semaphores[Index].CurrentUnits++;
-    SlimSemaphoreSignal((SlimSemaphore_t*)AcpiGbl_Semaphores[Index].OsHandle, (int)Units);
+    SemaphoreSignal((Semaphore_t*)AcpiGbl_Semaphores[Index].OsHandle, (int)Units);
     return (AE_OK);
 }
 
