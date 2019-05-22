@@ -957,7 +957,7 @@ AcpiOsWaitSemaphore(
         OsTimeout += 10;
     }
 
-    WaitStatus = SemaphoreWaitSimple(
+    WaitStatus = SemaphoreWait(
         (Semaphore_t*)AcpiGbl_Semaphores[Index].OsHandle, 
         OsTimeout);
     if (WaitStatus == OsTimeout) {
