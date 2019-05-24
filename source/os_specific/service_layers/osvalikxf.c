@@ -801,21 +801,21 @@ AcpiOsRedirectOutput (
  *****************************************************************************/
 ACPI_STATUS
 AcpiOsCreateLock(
-    ACPI_SPINLOCK           *OutHandle)
+    ACPI_SPINLOCK* OutHandle)
 {
     return AcpiOsCreateSemaphore(1, 1, OutHandle);
 }
 
 void
 AcpiOsDeleteLock(
-    ACPI_SPINLOCK           Handle)
+    ACPI_SPINLOCK Handle)
 {
     AcpiOsDeleteSemaphore(Handle);
 }
 
 ACPI_CPU_FLAGS
 AcpiOsAcquireLock(
-    ACPI_SPINLOCK           Handle)
+    ACPI_SPINLOCK Handle)
 {
     AcpiOsWaitSemaphore(Handle, 1, 0);
     return 0;
@@ -823,8 +823,8 @@ AcpiOsAcquireLock(
 
 void
 AcpiOsReleaseLock(
-    ACPI_SPINLOCK           Handle,
-    ACPI_CPU_FLAGS          Flags)
+    ACPI_SPINLOCK  Handle,
+    ACPI_CPU_FLAGS Flags)
 {
     AcpiOsSignalSemaphore(Handle, 1);
 }
@@ -931,8 +931,8 @@ AcpiOsWaitSemaphore(
     UINT32                  Units,
     UINT16                  Timeout)
 {
-    UINT32     Index     = (UINT32) Handle;
-    UINT32     OsTimeout = Timeout;
+    UINT32     Index = (UINT32) Handle;
+    UINT32     Msecs = Timeout;
     OsStatus_t WaitStatus;
     ACPI_FUNCTION_ENTRY ();
 
@@ -946,20 +946,20 @@ AcpiOsWaitSemaphore(
     }
 
     if (Timeout == ACPI_WAIT_FOREVER) {
-        OsTimeout = 0;
+        Msecs = 0;
         if (AcpiGbl_DebugTimeout) {
             // The debug timeout will prevent hang conditions
-            OsTimeout = ACPI_OS_DEBUG_TIMEOUT;
+            Msecs = ACPI_OS_DEBUG_TIMEOUT;
         }
     }
     else {
         // Add 10ms to account for clock tick granularity
-        OsTimeout += 10;
+        Msecs += 10;
     }
 
     WaitStatus = SemaphoreWait(
         (Semaphore_t*)AcpiGbl_Semaphores[Index].OsHandle, 
-        OsTimeout);
+        Msecs);
     if (WaitStatus == OsTimeout) {
         if (AcpiGbl_DebugTimeout) {
             ACPI_EXCEPTION ((AE_INFO, AE_TIME,
@@ -976,7 +976,7 @@ AcpiOsWaitSemaphore(
         return (AE_OK);
     }
 
-    AcpiGbl_Semaphores[Index].CurrentUnits--;
+    AcpiGbl_Semaphores[Index].CurrentUnits -= Units;
     return (AE_OK);
 }
 
