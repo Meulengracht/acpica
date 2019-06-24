@@ -472,9 +472,9 @@ AcpiOsMapMemory(
     if (Physical >= 0x1000 && Physical < 0x400000) {
         return (void*)Physical;
     }
-    if (CreateMemorySpaceMapping(GetCurrentMemorySpace(), &Physical, &Result, 
+    if (CreateMemorySpaceMapping(GetCurrentMemorySpace(), &Result, &Physical, 
         AdjustedLength, MAPPING_COMMIT | MAPPING_NOCACHE | MAPPING_PERSISTENT | MAPPING_READONLY,
-        MAPPING_PHYSICAL_FIXED | MAPPING_VIRTUAL_GLOBAL, __MASK) != OsSuccess) {
+        MAPPING_PHYSICAL_CONTIGIOUS | MAPPING_VIRTUAL_GLOBAL, __MASK) != OsSuccess) {
         // Uhh
         ERROR("Failed to map physical memory 0x%x", Where);
         return NULL;
@@ -533,12 +533,13 @@ AcpiOsGetPhysicalAddress(
     ACPI_PHYSICAL_ADDRESS   *PhysicalAddress)
 {
     VirtualAddress_t  Address = (VirtualAddress_t)LogicalAddress;
-    PhysicalAddress_t Result  = GetMemorySpaceMapping(GetCurrentMemorySpace(), Address);
-    if (Result != 0) {
-        *PhysicalAddress = (ACPI_PHYSICAL_ADDRESS)Result;
-        return AE_OK;
+    PhysicalAddress_t Result;
+    
+    if (GetMemorySpaceMapping(GetCurrentMemorySpace(), Address, 1, &Result) != OsSuccess) {
+        return AE_ERROR;
     }
-    return AE_ERROR;
+    *PhysicalAddress = (ACPI_PHYSICAL_ADDRESS)Result;
+    return AE_OK;
 }
 
 /******************************************************************************
