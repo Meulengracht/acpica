@@ -1,6 +1,7 @@
-/* MollenOS
+/**
+ * MollenOS
  *
- * Copyright 2011 - 2017, Philip Meulengracht
+ * Copyright 2017, Philip Meulengracht
  *
  * This program is free software : you can redistribute it and / or modify
  * it under the terms of the GNU General Public License as published by
@@ -212,7 +213,7 @@ ACPI_THREAD_ID
 AcpiOsGetThreadId (
     void)
 {
-    return (ACPI_THREAD_ID)GetCurrentThreadId();
+    return (ACPI_THREAD_ID)GetCurrentThreadId() + 1;
 }
 
 /******************************************************************************
