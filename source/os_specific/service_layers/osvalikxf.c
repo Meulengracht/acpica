@@ -29,6 +29,7 @@
 #include <arch/utils.h>
 #include <arch/time.h>
 #include <arch/io.h>
+#include <ddk/io.h>
 #include <semaphore.h>
 #include <memoryspace.h>
 #include <interrupts.h>
@@ -276,8 +277,10 @@ void
 AcpiOsSleep (
     UINT64 Milliseconds)
 {
+    clock_t Unused;
+    
     if (GetCurrentThreadForCore(ArchGetProcessorCoreId()) != NULL) {
-        SchedulerSleep((size_t)Milliseconds);
+        SchedulerSleep((size_t)Milliseconds, &Unused);
     }
     else {
         AcpiOsStall(Milliseconds * 1000);
