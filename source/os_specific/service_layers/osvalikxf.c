@@ -476,9 +476,9 @@ AcpiOsMapMemory(
     if (Physical >= 0x1000 && Physical < 0x400000) {
         return (void*)Physical;
     }
-    if (CreateMemorySpaceMapping(GetCurrentMemorySpace(), &Result, &Physical, 
-        AdjustedLength, MAPPING_COMMIT | MAPPING_NOCACHE | MAPPING_PERSISTENT | MAPPING_READONLY,
-        MAPPING_PHYSICAL_CONTIGIOUS | MAPPING_VIRTUAL_GLOBAL, __MASK) != OsSuccess) {
+    if (MemorySpaceMapContiguous(GetCurrentMemorySpace(), &Result, Physical, 
+            AdjustedLength, MAPPING_COMMIT | MAPPING_NOCACHE | MAPPING_PERSISTENT | MAPPING_READONLY,
+            MAPPING_VIRTUAL_GLOBAL) != OsSuccess) {
         // Uhh
         ERROR("Failed to map physical memory 0x%x", Where);
         return NULL;
@@ -513,7 +513,7 @@ AcpiOsUnmapMemory(
         return;
     }
     else {
-        if (RemoveMemorySpaceMapping(GetCurrentMemorySpace(), Address - Offset, AdjustedLength) != OsSuccess) {
+        if (MemorySpaceUnmap(GetCurrentMemorySpace(), Address - Offset, AdjustedLength) != OsSuccess) {
             ERROR("Failed to unmap memory 0x%x", Address);   
         }
     }
