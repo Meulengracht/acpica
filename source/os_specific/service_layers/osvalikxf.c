@@ -427,7 +427,7 @@ AcpiOsGetTimer (
  *****************************************************************************/
 void *
 AcpiOsAllocate(
-    ACPI_SIZE               Size)
+    ACPI_SIZE Size)
 {
     return kmalloc((size_t)Size);
 }
@@ -470,6 +470,7 @@ AcpiOsMapMemory(
     PhysicalAddress_t Physical       = (PhysicalAddress_t)Where;
     size_t            Offset         = (size_t)(Where % GetMemorySpacePageSize());
     size_t            AdjustedLength = Length + Offset;
+    Flags_t           MemoryFlags    = MAPPING_COMMIT | MAPPING_NOCACHE | MAPPING_PERSISTENT | MAPPING_READONLY;
     VirtualAddress_t  Result         = 0;
 
     // We have everything below 4mb identity mapped
@@ -477,8 +478,7 @@ AcpiOsMapMemory(
         return (void*)Physical;
     }
     if (MemorySpaceMapContiguous(GetCurrentMemorySpace(), &Result, Physical, 
-            AdjustedLength, MAPPING_COMMIT | MAPPING_NOCACHE | MAPPING_PERSISTENT | MAPPING_READONLY,
-            MAPPING_VIRTUAL_GLOBAL) != OsSuccess) {
+            AdjustedLength, MemoryFlags, MAPPING_VIRTUAL_GLOBAL) != OsSuccess) {
         // Uhh
         ERROR("Failed to map physical memory 0x%x", Where);
         return NULL;
