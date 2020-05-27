@@ -470,7 +470,7 @@ AcpiOsMapMemory(
     PhysicalAddress_t Physical       = (PhysicalAddress_t)Where;
     size_t            Offset         = (size_t)(Where % GetMemorySpacePageSize());
     size_t            AdjustedLength = Length + Offset;
-    Flags_t           MemoryFlags    = MAPPING_COMMIT | MAPPING_NOCACHE | MAPPING_PERSISTENT | MAPPING_READONLY;
+    unsigned int      MemoryFlags    = MAPPING_COMMIT | MAPPING_NOCACHE | MAPPING_PERSISTENT | MAPPING_READONLY;
     VirtualAddress_t  Result         = 0;
 
     // We have everything below 4mb identity mapped
