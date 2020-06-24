@@ -51,4 +51,3 @@ set_target_properties(libacpi
     PROPERTIES
         COMPILE_FLAGS "-Wno-unused-const-variable -DACPI_LARGE_NAMESPACE_NODE -DACPI_LIBRARY -DLIBC_KERNEL -D__LIBDS_KERNEL__"
 )
-install(TARGETS libacpi LIBRARY DESTINATION lib)
