@@ -66,8 +66,8 @@ static int                    AcpiGbl_DebugTimeout                        = 0;
 
 static InterruptStatus_t
 AcpiInterruptEntry(
-    _In_ FastInterruptResources_t* ResourceTable,
-    _In_ void*                     Context)
+        _In_ InterruptFunctionTable_t* ResourceTable,
+        _In_ void*                     Context)
 {
     struct AcpiInterruptProxy* Proxy = (struct AcpiInterruptProxy*)Context;
     _CRT_UNUSED(ResourceTable);
@@ -149,7 +149,7 @@ AcpiOsInstallInterruptHandler (
     for (i = 0; i < MAX_NUMBER_ACPI_INTS; i++) {
         if (AcpiGbl_Interrupts[i].Handler == NULL) {
             memset(&ACPIInterrupt, 0, sizeof(DeviceInterrupt_t));
-            ACPIInterrupt.FastInterrupt.Handler = (InterruptHandler_t)AcpiInterruptEntry;
+            ACPIInterrupt.ResourceTable.Handler = (InterruptHandler_t)AcpiInterruptEntry;
         	ACPIInterrupt.Context               = &AcpiGbl_Interrupts[i];
         	ACPIInterrupt.Line                  = InterruptNumber;
         	ACPIInterrupt.Pin                   = INTERRUPT_NONE;
