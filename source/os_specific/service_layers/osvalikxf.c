@@ -214,7 +214,7 @@ ACPI_THREAD_ID
 AcpiOsGetThreadId (
     void)
 {
-    return (ACPI_THREAD_ID)GetCurrentThreadId() + 1;
+    return (ACPI_THREAD_ID) ThreadCurrentHandle() + 1;
 }
 
 /******************************************************************************
@@ -237,7 +237,7 @@ AcpiOsExecute (
     void                    *Context)
 {
     UUId_t     Id;
-    OsStatus_t Status = CreateThread("acpi-worker", Function, Context, 0, UUID_INVALID, &Id);
+    OsStatus_t Status = ThreadCreate("acpi-worker", Function, Context, 0, UUID_INVALID, &Id);
     if (Status != OsSuccess) {
         return AE_OK;
     }
@@ -279,7 +279,7 @@ AcpiOsSleep (
 {
     clock_t Unused;
     
-    if (GetCurrentThreadForCore(ArchGetProcessorCoreId()) != NULL) {
+    if (ThreadCurrentForCore(ArchGetProcessorCoreId()) != NULL) {
         SchedulerSleep((size_t)Milliseconds, &Unused);
     }
     else {
