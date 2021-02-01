@@ -237,7 +237,8 @@ AcpiOsExecute (
     void                    *Context)
 {
     UUId_t     Id;
-    OsStatus_t Status = ThreadCreate("acpi-worker", Function, Context, 0, UUID_INVALID, &Id);
+    OsStatus_t Status = ThreadCreate("acpi-worker", Function, Context,
+                                     0, UUID_INVALID, 0, 0, &Id);
     if (Status != OsSuccess) {
         return AE_OK;
     }
