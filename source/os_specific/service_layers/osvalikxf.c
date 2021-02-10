@@ -468,11 +468,11 @@ AcpiOsMapMemory(
     ACPI_PHYSICAL_ADDRESS   Where,
     ACPI_SIZE               Length)
 {
-    PhysicalAddress_t Physical       = (PhysicalAddress_t)Where;
-    size_t            Offset         = (size_t)(Where % GetMemorySpacePageSize());
+    paddr_t Physical = (paddr_t)Where;
+    size_t  Offset   = (size_t)(Where % GetMemorySpacePageSize());
     size_t            AdjustedLength = Length + Offset;
-    unsigned int      MemoryFlags    = MAPPING_COMMIT | MAPPING_NOCACHE | MAPPING_PERSISTENT | MAPPING_READONLY;
-    VirtualAddress_t  Result         = 0;
+    unsigned int MemoryFlags = MAPPING_COMMIT | MAPPING_NOCACHE | MAPPING_PERSISTENT | MAPPING_READONLY;
+    vaddr_t      Result      = 0;
 
     // We have everything below 4mb identity mapped
     if (Physical >= 0x1000 && Physical < 0x400000) {
@@ -505,8 +505,8 @@ AcpiOsUnmapMemory(
     void*                   LogicalAddress,
     ACPI_SIZE               Size)
 {
-    VirtualAddress_t Address        = (VirtualAddress_t)LogicalAddress;
-    size_t           Offset         = Address % GetMemorySpacePageSize();
+    vaddr_t Address = (vaddr_t)LogicalAddress;
+    size_t  Offset  = Address % GetMemorySpacePageSize();
     size_t           AdjustedLength = Size + Offset;
 
     // We have everything below 4mb identity mapped
@@ -537,8 +537,8 @@ AcpiOsGetPhysicalAddress(
     void                    *LogicalAddress,
     ACPI_PHYSICAL_ADDRESS   *PhysicalAddress)
 {
-    VirtualAddress_t  Address = (VirtualAddress_t)LogicalAddress;
-    PhysicalAddress_t Result;
+    vaddr_t Address = (vaddr_t)LogicalAddress;
+    paddr_t Result;
     
     if (GetMemorySpaceMapping(GetCurrentMemorySpace(), Address, 1, &Result) != OsSuccess) {
         return AE_ERROR;
