@@ -704,7 +704,7 @@
     /*
      * Exceptional conditions handler
      *
-     * arg0 - AcpiStatus
+     * arg0 - g_acpiStatus
      * arg1 - AsciiExceptionString
      * arg2 - ID of current thread
      */
