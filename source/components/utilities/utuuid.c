@@ -156,7 +156,7 @@
         ACPI_MODULE_NAME    ("utuuid")
 
 
-#if (defined ACPI_ASL_COMPILER || defined ACPI_EXEC_APP || defined ACPI_HELP_APP)
+#if (defined ACPI_ASL_COMPILER || defined ACPI_EXEC_APP || defined ACPI_HELP_APP || defined ACPI_LIBRARY)
 /*
  * UUID support functions.
  *

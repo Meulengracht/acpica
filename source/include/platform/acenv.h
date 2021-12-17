@@ -350,6 +350,9 @@
 #elif defined(__QNX__)
 #include "acqnx.h"
 
+#elif defined(MOLLENOS)
+#include "acvali.h"
+
 /*
  * EFI applications can be built with -nostdlib, in this case, it must be
  * included after including all other host environmental definitions, in
@@ -492,7 +495,9 @@
 #include <ctype.h>
 #if defined (ACPI_APPLICATION) || defined(ACPI_LIBRARY)
 #include <stdio.h>
+#if !defined(MOLLENOS)
 #include <fcntl.h>
+#endif
 #include <errno.h>
 #include <time.h>
 #include <signal.h>
