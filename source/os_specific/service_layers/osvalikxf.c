@@ -472,13 +472,21 @@ AcpiOsMapMemory(
     paddr_t      physical       = (paddr_t)Where;
     size_t       offset         = (size_t)(Where % GetMemorySpacePageSize());
     size_t       adjustedLength = Length + offset;
-    unsigned int memoryFlags = MAPPING_COMMIT | MAPPING_NOCACHE | MAPPING_PERSISTENT;
-    vaddr_t      result      = 0;
+    unsigned int memoryFlags    = MAPPING_COMMIT | MAPPING_NOCACHE | MAPPING_PERSISTENT;
+    vaddr_t      result         = 0;
+    OsStatus_t   osStatus;
     TRACE("AcpiOsMapMemory(Where=0x%llx, Length=0x%llx)", Where, Length);
 
-    if (MemorySpaceMapContiguous(GetCurrentMemorySpace(), &result, physical,
-                                 adjustedLength, memoryFlags, MAPPING_VIRTUAL_GLOBAL) != OsSuccess) {
-        // Uhh
+    osStatus = MemorySpaceMapContiguous(
+            GetCurrentMemorySpace(),
+            &result,
+            physical,
+            adjustedLength,
+            memoryFlags,
+            MAPPING_VIRTUAL_GLOBAL
+    );
+
+    if (osStatus != OsSuccess) {
         ERROR("Failed to map physical memory 0x%x", Where);
         return NULL;
     }
@@ -504,18 +512,18 @@ AcpiOsUnmapMemory(
     void*                   LogicalAddress,
     ACPI_SIZE               Size)
 {
-    vaddr_t Address = (vaddr_t)LogicalAddress;
-    size_t  Offset  = Address % GetMemorySpacePageSize();
-    size_t           AdjustedLength = Size + Offset;
+    vaddr_t    address        = (vaddr_t)LogicalAddress;
+    size_t     offset         = address % GetMemorySpacePageSize();
+    size_t     adjustedLength = Size + offset;
+    OsStatus_t osStatus;
 
-    // We have everything below 4mb identity mapped
-    if (Address >= 0x1000 && Address < 0x400000) {
-        return;
-    }
-    else {
-        if (MemorySpaceUnmap(GetCurrentMemorySpace(), Address - Offset, AdjustedLength) != OsSuccess) {
-            ERROR("Failed to unmap memory 0x%x", Address);   
-        }
+    osStatus = MemorySpaceUnmap(
+            GetCurrentMemorySpace(),
+            address - offset,
+            adjustedLength
+    );
+    if (osStatus != OsSuccess) {
+        ERROR("Failed to unmap memory 0x%x", address);
     }
 }
 
