@@ -22,7 +22,7 @@
  */
 
 #define __MODULE "ACPI"
-#define __TRACE
+//#define __TRACE
 
 /* Includes
  * - (OS) System */
@@ -761,21 +761,25 @@ AcpiOsVprintf (
     const char              *Format,
     va_list                 Args)
 {
-    char Buffer[256] = { 0 };
-    int  i           = 0;
-    vsprintf(Buffer, Format, Args);
-    
-    while (Buffer[i]) {
-        if (AcpiGbl_OutputIndex == sizeof(AcpiGbl_OutputBuffer) || Buffer[i] == '\n') {
+    char buffer[256];
+    int  bytesFormatted;
+    int  i = 0;
+
+    bytesFormatted = vsnprintf(&buffer[0], sizeof(buffer)-1, Format, Args);
+    buffer[bytesFormatted] = '\0';
+
+    // do line buffering, this is a very primitive way of buffering output
+    while (buffer[i]) {
+        if (AcpiGbl_OutputIndex == sizeof(AcpiGbl_OutputBuffer) || buffer[i] == '\n') {
             WRITELINE(&AcpiGbl_OutputBuffer[0]);
             memset(&AcpiGbl_OutputBuffer[0], 0, sizeof(AcpiGbl_OutputBuffer));
             AcpiGbl_OutputIndex = 0;
-            if (Buffer[i] == '\n') {
+            if (buffer[i] == '\n') {
                 i++;
             }
             continue;
         }
-        AcpiGbl_OutputBuffer[AcpiGbl_OutputIndex++] = Buffer[i++];
+        AcpiGbl_OutputBuffer[AcpiGbl_OutputIndex++] = buffer[i++];
     }
 }
 

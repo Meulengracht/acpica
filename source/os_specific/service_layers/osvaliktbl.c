@@ -101,9 +101,7 @@ AcpiOsGetRootPointer (
         }
     }
 
-    TRACE("AcpiOsGetRootPointer: Locating RSDP pointer");
 	AcpiFindRootPointer(&physicalAddress);
-    TRACE("AcpiOsGetRootPointer: done 0x%llx", physicalAddress);
 	return physicalAddress;
 }
 

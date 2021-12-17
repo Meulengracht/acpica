@@ -49,5 +49,6 @@ add_library(libacpi
 )
 set_target_properties(libacpi
     PROPERTIES
-        COMPILE_FLAGS "-Wno-unused-const-variable -DACPI_LARGE_NAMESPACE_NODE -DACPI_LIBRARY -DLIBC_KERNEL -D__LIBDS_KERNEL__"
+        COMPILE_OPTIONS "-mno-sse;-Wno-unused-const-variable"
+        COMPILE_DEFINITIONS "ACPI_LARGE_NAMESPACE_NODE;ACPI_LIBRARY;LIBC_KERNEL;__LIBDS_KERNEL__"
 )
