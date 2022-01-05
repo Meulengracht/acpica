@@ -14,7 +14,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
  *
  * ACPICA Support Layer (System Functions)
@@ -28,15 +28,14 @@
  * - (OS) System */
 #include <arch/thread.h>
 #include <arch/utils.h>
-#include <arch/time.h>
 #include <arch/io.h>
+#include <component/timer.h>
 #include <ddk/io.h>
 #include <semaphore.h>
 #include <memoryspace.h>
 #include <interrupts.h>
 #include <threading.h>
 #include <scheduler.h>
-#include <timers.h>
 #include <debug.h>
 #include <heap.h>
 
@@ -282,10 +281,10 @@ AcpiOsSleep (
     clock_t Unused;
     
     if (ThreadCurrentForCore(ArchGetProcessorCoreId()) != NULL) {
-        SchedulerSleep((size_t)Milliseconds, &Unused);
+        SchedulerSleep(Milliseconds * NSEC_PER_MSEC, &Unused);
     }
     else {
-        AcpiOsStall(Milliseconds * 1000);
+        AcpiOsStall(Milliseconds * USEC_PER_MSEC);
     }
 }
 
@@ -304,8 +303,7 @@ void
 AcpiOsStall (
     UINT32                  Microseconds)
 {
-    // We never stall for less than 1 ms
-    ArchStallProcessorCore((Microseconds / 1000) + 1);
+    SystemTimerStall(Microseconds * NSEC_PER_USEC);
 }
 
 /******************************************************************************
@@ -411,9 +409,9 @@ UINT64
 AcpiOsGetTimer (
     void)
 {
-    UINT64 CurrentTime = 0;
-    TimersGetSystemTick((clock_t*)&CurrentTime);
-    return CurrentTime;
+    LargeUInteger_t CurrentTime;
+    SystemTimerGetClockTick(&CurrentTime);
+    return CurrentTime.QuadPart;
 }
 
 /******************************************************************************
