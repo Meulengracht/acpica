@@ -1,18 +1,6 @@
 # Project setup
-project (ACPICA)
+project (vali-lib-acpica)
 enable_language (C)
-
-# Configure include paths
-include_directories (
-    ./source/include
-    ./source/compiler
-    ../../boot/include
-    ../../kernel/arch/include
-    ../../kernel/include
-    ../libddk/include
-    ../libds/include
-    ../libc/include
-)
 
 set (SOURCES_COMMON
     source/common/ahids.c
@@ -47,8 +35,7 @@ add_library(libacpi
     ${SOURCES_TABLES}
     ${SOURCES_UTILITIES}
 )
-set_target_properties(libacpi
-    PROPERTIES
-        COMPILE_OPTIONS "-mno-sse;-Wno-unused-const-variable"
-        COMPILE_DEFINITIONS "ACPI_LARGE_NAMESPACE_NODE;ACPI_LIBRARY;LIBC_KERNEL;__LIBDS_KERNEL__"
-)
+target_compile_options(libacpi PRIVATE -mno-sse -Wno-unused-const-variable)
+target_compile_definitions(libacpi PRIVATE -DACPI_LARGE_NAMESPACE_NODE -DACPI_LIBRARY -DLIBC_KERNEL -D__LIBDS_KERNEL__)
+target_include_directories(libacpi PRIVATE ../libddk/include ../libc/include ../libds/include ../../kernel/include ../../boot/include)
+target_include_directories(libacpi PUBLIC source/include)
