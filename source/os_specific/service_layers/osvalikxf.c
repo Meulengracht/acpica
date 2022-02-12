@@ -1,6 +1,4 @@
 /**
- * MollenOS
- *
  * Copyright 2017, Philip Meulengracht
  *
  * This program is free software : you can redistribute it and / or modify
@@ -16,9 +14,6 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
- *
- * ACPICA Support Layer (System Functions)
- *  - Missing implementations are todo
  */
 
 #define __MODULE "ACPI"
@@ -236,10 +231,20 @@ AcpiOsExecute (
     ACPI_OSD_EXEC_CALLBACK  Function,
     void                    *Context)
 {
-    UUId_t     Id;
-    OsStatus_t Status = ThreadCreate("acpi-worker", Function, Context,
-                                     0, UUID_INVALID, 0, 0, &Id);
-    if (Status != OsSuccess) {
+    UUId_t     id;
+    OsStatus_t osStatus;
+
+    osStatus = ThreadCreate(
+            "acpi-worker",
+            Function,
+            Context,
+            0,
+            UUID_INVALID,
+            0,
+            0,
+            &id
+    );
+    if (osStatus != OsSuccess) {
         return AE_OK;
     }
     return AE_ERROR;
@@ -278,10 +283,11 @@ void
 AcpiOsSleep (
     UINT64 Milliseconds)
 {
-    clock_t Unused;
+    clock_t unused;
+    WARNING("AcpiOsSleep(Milliseconds=%llu)", Milliseconds);
     
     if (ThreadCurrentForCore(ArchGetProcessorCoreId()) != NULL) {
-        SchedulerSleep(Milliseconds * NSEC_PER_MSEC, &Unused);
+        SchedulerSleep(Milliseconds * NSEC_PER_MSEC, &unused);
     }
     else {
         AcpiOsStall(Milliseconds * USEC_PER_MSEC);
@@ -303,7 +309,31 @@ void
 AcpiOsStall (
     UINT32                  Microseconds)
 {
+    WARNING("AcpiOsStall(Microseconds=%llu)", Microseconds);
     SystemTimerStall(Microseconds * NSEC_PER_USEC);
+}
+
+/******************************************************************************
+ *
+ * FUNCTION:    AcpiOsGetTimer
+ *
+ * PARAMETERS:  None
+ *
+ * RETURN:      Current ticks in 100-nanosecond units
+ *
+ * DESCRIPTION: Get the value of a system timer
+ *
+ ******************************************************************************/
+UINT64
+AcpiOsGetTimer (
+        void)
+{
+    tick_t currentTick;
+
+    // This retrieves the timestamp in ns, which menas we must divide by 100
+    SystemTimerGetTimestamp(&currentTick);
+
+    return currentTick / 100;
 }
 
 /******************************************************************************
@@ -348,8 +378,16 @@ AcpiOsSignal (
     UINT32                  Function,
     void                    *Info)
 {
-    FATAL(FATAL_SCOPE_KERNEL, "AcpiOsSignal()");
-    return AE_ERROR;
+    switch (Function) {
+        case ACPI_SIGNAL_BREAKPOINT:
+            break;
+        case ACPI_SIGNAL_FATAL:
+            FATAL(FATAL_SCOPE_KERNEL, "AcpiOsSignal => FATAL SIGNAL?");
+            break;
+        default:
+            break;
+    }
+    return AE_OK;
 }
 
 /******************************************************************************
@@ -392,26 +430,6 @@ AcpiOsWritable (
 {
     FATAL(FATAL_SCOPE_KERNEL, "AcpiOsWritable()");
     return FALSE;
-}
-
-/******************************************************************************
- *
- * FUNCTION:    AcpiOsGetTimer
- *
- * PARAMETERS:  None
- *
- * RETURN:      Current ticks in 100-nanosecond units
- *
- * DESCRIPTION: Get the value of a system timer
- *
- ******************************************************************************/
-UINT64
-AcpiOsGetTimer (
-    void)
-{
-    LargeUInteger_t CurrentTime;
-    SystemTimerGetClockTick(&CurrentTime);
-    return CurrentTime.QuadPart;
 }
 
 /******************************************************************************
