@@ -795,7 +795,7 @@ AcpiOsVprintf (
     // do line buffering, this is a very primitive way of buffering output
     while (buffer[i]) {
         if (AcpiGbl_OutputIndex == sizeof(AcpiGbl_OutputBuffer) || buffer[i] == '\n') {
-            WRITELINE(&AcpiGbl_OutputBuffer[0]);
+            DEBUG(&AcpiGbl_OutputBuffer[0]);
             memset(&AcpiGbl_OutputBuffer[0], 0, sizeof(AcpiGbl_OutputBuffer));
             AcpiGbl_OutputIndex = 0;
             if (buffer[i] == '\n') {
