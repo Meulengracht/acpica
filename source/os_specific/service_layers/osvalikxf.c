@@ -59,7 +59,7 @@ static Semaphore_t            Semaphores[ACPI_OS_MAX_SEMAPHORES]          = { { 
 static ACPI_OS_SEMAPHORE_INFO AcpiGbl_Semaphores[ACPI_OS_MAX_SEMAPHORES]  = { { 0 } };
 static int                    AcpiGbl_DebugTimeout                        = 0;
 
-static InterruptStatus_t
+static irqstatus_t
 AcpiInterruptEntry(
         _In_ InterruptFunctionTable_t* ResourceTable,
         _In_ void*                     Context)
@@ -68,9 +68,9 @@ AcpiInterruptEntry(
     _CRT_UNUSED(ResourceTable);
     
     if (Proxy->Handler(Proxy->Context) != ACPI_INTERRUPT_HANDLED) {
-        return InterruptNotHandled;
+        return IRQSTATUS_NOT_HANDLED;
     }
-    return InterruptHandled; 
+    return IRQSTATUS_HANDLED;
 }
 
 /******************************************************************************
@@ -232,7 +232,7 @@ AcpiOsExecute (
     void                    *Context)
 {
     UUId_t     id;
-    OsStatus_t osStatus;
+    oscode_t osStatus;
 
     osStatus = ThreadCreate(
             "acpi-worker",
@@ -490,7 +490,7 @@ AcpiOsMapMemory(
     size_t       adjustedLength = Length + offset;
     unsigned int memoryFlags    = MAPPING_COMMIT | MAPPING_NOCACHE | MAPPING_PERSISTENT;
     vaddr_t      result         = 0;
-    OsStatus_t   osStatus;
+    oscode_t   osStatus;
     TRACE("AcpiOsMapMemory(Where=0x%llx, Length=0x%llx)", Where, Length);
 
     osStatus = MemorySpaceMapContiguous(
@@ -531,7 +531,7 @@ AcpiOsUnmapMemory(
     vaddr_t    address        = (vaddr_t)LogicalAddress;
     size_t     offset         = address % GetMemorySpacePageSize();
     size_t     adjustedLength = Size + offset;
-    OsStatus_t osStatus;
+    oscode_t osStatus;
 
     osStatus = MemorySpaceUnmap(
             GetCurrentMemorySpace(),
@@ -963,7 +963,7 @@ AcpiOsWaitSemaphore(
 {
     UINT32     Index = (UINT32)(uintptr_t)Handle;
     UINT32     Msecs = Timeout;
-    OsStatus_t WaitStatus;
+    oscode_t WaitStatus;
     ACPI_FUNCTION_ENTRY ();
 
     if ((Index >= ACPI_OS_MAX_SEMAPHORES) || !AcpiGbl_Semaphores[Index].OsHandle) {
