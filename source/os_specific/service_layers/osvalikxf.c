@@ -47,7 +47,7 @@ ACPI_MODULE_NAME("vali_kernel_interface")
 #define MAX_NUMBER_ACPI_INTS 4
 
 static struct AcpiInterruptProxy {
-    UUId_t           Id;
+    uuid_t           Id;
     ACPI_OSD_HANDLER Handler;
     void*            Context;
 }             AcpiGbl_Interrupts[MAX_NUMBER_ACPI_INTS] = { { 0 } };
@@ -231,7 +231,7 @@ AcpiOsExecute (
     ACPI_OSD_EXEC_CALLBACK  Function,
     void                    *Context)
 {
-    UUId_t     id;
+    uuid_t     id;
     oscode_t osStatus;
 
     osStatus = ThreadCreate(
