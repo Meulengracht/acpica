@@ -232,7 +232,7 @@ AcpiOsExecute (
     void                    *Context)
 {
     uuid_t     id;
-    oscode_t osStatus;
+    oserr_t osStatus;
 
     osStatus = ThreadCreate(
             "acpi-worker",
@@ -490,7 +490,7 @@ AcpiOsMapMemory(
     size_t       adjustedLength = Length + offset;
     unsigned int memoryFlags    = MAPPING_COMMIT | MAPPING_NOCACHE | MAPPING_PERSISTENT;
     vaddr_t      result         = 0;
-    oscode_t   osStatus;
+    oserr_t   osStatus;
     TRACE("AcpiOsMapMemory(Where=0x%llx, Length=0x%llx)", Where, Length);
 
     osStatus = MemorySpaceMapContiguous(
@@ -531,7 +531,7 @@ AcpiOsUnmapMemory(
     vaddr_t    address        = (vaddr_t)LogicalAddress;
     size_t     offset         = address % GetMemorySpacePageSize();
     size_t     adjustedLength = Size + offset;
-    oscode_t osStatus;
+    oserr_t osStatus;
 
     osStatus = MemorySpaceUnmap(
             GetCurrentMemorySpace(),
@@ -963,7 +963,7 @@ AcpiOsWaitSemaphore(
 {
     UINT32     Index = (UINT32)(uintptr_t)Handle;
     UINT32     Msecs = Timeout;
-    oscode_t WaitStatus;
+    oserr_t WaitStatus;
     ACPI_FUNCTION_ENTRY ();
 
     if ((Index >= ACPI_OS_MAX_SEMAPHORES) || !AcpiGbl_Semaphores[Index].OsHandle) {
