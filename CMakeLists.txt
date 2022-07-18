@@ -37,5 +37,5 @@ add_library(libacpi
 )
 target_compile_options(libacpi PRIVATE -mno-sse -Wno-unused-const-variable)
 target_compile_definitions(libacpi PRIVATE -DACPI_LARGE_NAMESPACE_NODE -DACPI_LIBRARY -DLIBC_KERNEL -D__LIBDS_KERNEL__)
-target_include_directories(libacpi PRIVATE ../libddk/include ../libc/include ../libds/include ../../kernel/include ../../boot/include)
+target_include_directories(libacpi PRIVATE ../libds/include ../../kernel/include ../../boot/include ../libddk/include ../libos/include ../libc/include)
 target_include_directories(libacpi PUBLIC source/include)
