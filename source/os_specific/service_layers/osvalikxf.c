@@ -183,7 +183,7 @@ AcpiOsRemoveInterruptHandler (
     for (i = 0; i < MAX_NUMBER_ACPI_INTS; i++) {
         if (AcpiGbl_Interrupts[i].Handler == ServiceRoutine &&
             AcpiGbl_Interrupts[i].Context == (void*)(size_t)InterruptNumber) {
-            if (InterruptUnregister(AcpiGbl_Interrupts[i].Id) != OsOK) {
+            if (InterruptUnregister(AcpiGbl_Interrupts[i].Id) != OS_EOK) {
                 return AE_ERROR;
             }
             AcpiGbl_Interrupts[i].Handler = NULL;
@@ -244,7 +244,7 @@ AcpiOsExecute (
             0,
             &id
     );
-    if (osStatus != OsOK) {
+    if (osStatus != OS_EOK) {
         return AE_OK;
     }
     return AE_ERROR;
@@ -502,7 +502,7 @@ AcpiOsMapMemory(
             MAPPING_VIRTUAL_GLOBAL
     );
 
-    if (osStatus != OsOK) {
+    if (osStatus != OS_EOK) {
         ERROR("Failed to map physical memory 0x%x", Where);
         return NULL;
     }
@@ -538,7 +538,7 @@ AcpiOsUnmapMemory(
             address - offset,
             adjustedLength
     );
-    if (osStatus != OsOK) {
+    if (osStatus != OS_EOK) {
         ERROR("Failed to unmap memory 0x%x", address);
     }
 }
@@ -563,7 +563,7 @@ AcpiOsGetPhysicalAddress(
     vaddr_t Address = (vaddr_t)LogicalAddress;
     paddr_t Result;
     
-    if (GetMemorySpaceMapping(GetCurrentMemorySpace(), Address, 1, &Result) != OsOK) {
+    if (GetMemorySpaceMapping(GetCurrentMemorySpace(), Address, 1, &Result) != OS_EOK) {
         return AE_ERROR;
     }
     *PhysicalAddress = (ACPI_PHYSICAL_ADDRESS)Result;
@@ -591,7 +591,7 @@ AcpiOsReadPort (
 {
     ACPI_FUNCTION_NAME(OsReadPort);
     size_t LargeValue;
-    if (ReadDirectIo(DeviceIoPortBased, Address, DIVUP(Width, 8), &LargeValue) != OsOK) {
+    if (ReadDirectIo(DeviceIoPortBased, Address, DIVUP(Width, 8), &LargeValue) != OS_EOK) {
         ACPI_ERROR((AE_INFO, "Bad width parameter: %X", Width));
         return (AE_BAD_PARAMETER);
     }
@@ -620,7 +620,7 @@ AcpiOsWritePort (
 {
     ACPI_FUNCTION_NAME(OsWritePort);
     size_t OutValue = (size_t)(Value & 0xFFFFFFFF);
-    if (WriteDirectIo(DeviceIoPortBased, Address, DIVUP(Width, 8), OutValue) != OsOK) {
+    if (WriteDirectIo(DeviceIoPortBased, Address, DIVUP(Width, 8), OutValue) != OS_EOK) {
         ACPI_ERROR((AE_INFO, "Bad width parameter: %X", Width));
         return (AE_BAD_PARAMETER);
     }
@@ -649,7 +649,7 @@ AcpiOsReadMemory (
 {
     ACPI_FUNCTION_NAME(AcpiOsReadMemory);
     size_t InputValue;
-    if (ReadDirectIo(DeviceIoMemoryBased, Address, DIVUP(Width, 8), &InputValue) != OsOK) {
+    if (ReadDirectIo(DeviceIoMemoryBased, Address, DIVUP(Width, 8), &InputValue) != OS_EOK) {
         ACPI_ERROR((AE_INFO, "Bad width parameter: %X", Width));
         return (AE_BAD_PARAMETER);
     }
@@ -678,7 +678,7 @@ AcpiOsWriteMemory (
 {
     ACPI_FUNCTION_NAME(AcpiOsWriteMemory);
     size_t OutValue = (size_t)Value;
-    if (WriteDirectIo(DeviceIoMemoryBased, Address, DIVUP(Width, 8), OutValue) != OsOK) {
+    if (WriteDirectIo(DeviceIoMemoryBased, Address, DIVUP(Width, 8), OutValue) != OS_EOK) {
         ACPI_ERROR((AE_INFO, "Bad width parameter: %X", Width));
         return (AE_BAD_PARAMETER);
     }
@@ -708,7 +708,7 @@ AcpiOsReadPciConfiguration (
 {
     ACPI_FUNCTION_NAME(AcpiOsReadPciConfiguration);
     size_t InputValue;
-    if (ReadDirectPci(PciId->Bus, PciId->Device, PciId->Function, Reg, DIVUP(Width, 8), &InputValue) != OsOK) {
+    if (ReadDirectPci(PciId->Bus, PciId->Device, PciId->Function, Reg, DIVUP(Width, 8), &InputValue) != OS_EOK) {
         ACPI_ERROR((AE_INFO, "Bad width parameter: %X", Width));
         return (AE_BAD_PARAMETER);
     }
@@ -739,7 +739,7 @@ AcpiOsWritePciConfiguration (
 {
     ACPI_FUNCTION_NAME(AcpiOsWritePciConfiguration);
     size_t OutValue = (size_t)Value;
-    if (WriteDirectPci(PciId->Bus, PciId->Device, PciId->Function, Reg, DIVUP(Width, 8), OutValue) != OsOK) {
+    if (WriteDirectPci(PciId->Bus, PciId->Device, PciId->Function, Reg, DIVUP(Width, 8), OutValue) != OS_EOK) {
         ACPI_ERROR((AE_INFO, "Bad width parameter: %X", Width));
         return (AE_BAD_PARAMETER);
     }
@@ -990,7 +990,7 @@ AcpiOsWaitSemaphore(
     WaitStatus = SemaphoreWait(
         (Semaphore_t*)AcpiGbl_Semaphores[Index].OsHandle, 
         Msecs);
-    if (WaitStatus == OsTimeout) {
+    if (WaitStatus == OS_ETIMEOUT) {
         if (AcpiGbl_DebugTimeout) {
             ACPI_EXCEPTION ((AE_INFO, AE_TIME,
                 "Debug timeout on semaphore 0x%04X (%ums)\n",
