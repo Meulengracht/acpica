@@ -961,12 +961,14 @@ AcpiOsWaitSemaphore(
     UINT32                  Units,
     UINT16                  Timeout)
 {
-    UINT32     Index = (UINT32)(uintptr_t)Handle;
-    UINT32     Msecs = Timeout;
-    oserr_t WaitStatus;
+    UINT32         index = (UINT32)(uintptr_t)Handle;
+    UINT32         msecs = Timeout;
+    OSTimestamp_t  deadline = { 0, 0 };
+    OSTimestamp_t* pd;
+    oserr_t        waitStatus;
     ACPI_FUNCTION_ENTRY ();
 
-    if ((Index >= ACPI_OS_MAX_SEMAPHORES) || !AcpiGbl_Semaphores[Index].OsHandle) {
+    if ((index >= ACPI_OS_MAX_SEMAPHORES) || !AcpiGbl_Semaphores[index].OsHandle) {
         return (AE_BAD_PARAMETER);
     }
 
@@ -976,37 +978,40 @@ AcpiOsWaitSemaphore(
     }
 
     if (Timeout == ACPI_WAIT_FOREVER) {
-        Msecs = 0;
+        pd = NULL;
         if (AcpiGbl_DebugTimeout) {
             // The debug timeout will prevent hang conditions
-            Msecs = ACPI_OS_DEBUG_TIMEOUT;
+            msecs = ACPI_OS_DEBUG_TIMEOUT;
         }
-    }
-    else {
-        // Add 10ms to account for clock tick granularity
-        Msecs += 10;
+    } else {
+        SystemTimerGetWallClockTime(&deadline);
+        OSTimestampAddNsec(&deadline, &deadline, (Timeout + 1) * NSEC_PER_MSEC);
+
+        // set the deadline pointer
+        pd = &deadline;
     }
 
-    WaitStatus = SemaphoreWait(
-        (Semaphore_t*)AcpiGbl_Semaphores[Index].OsHandle, 
-        Msecs);
-    if (WaitStatus == OS_ETIMEOUT) {
+    waitStatus = SemaphoreWait(
+            (Semaphore_t*)AcpiGbl_Semaphores[index].OsHandle,
+            pd
+    );
+    if (waitStatus == OS_ETIMEOUT) {
         if (AcpiGbl_DebugTimeout) {
             ACPI_EXCEPTION ((AE_INFO, AE_TIME,
                 "Debug timeout on semaphore 0x%04X (%ums)\n",
-                Index, ACPI_OS_DEBUG_TIMEOUT));
+                index, ACPI_OS_DEBUG_TIMEOUT));
         }
         return (AE_TIME);
     }
 
-    if (AcpiGbl_Semaphores[Index].CurrentUnits == 0) {
+    if (AcpiGbl_Semaphores[index].CurrentUnits == 0) {
         ACPI_ERROR ((AE_INFO,
             "%s - No unit received. Timeout 0x%X, OS_Status 0x%X",
-            "mutex" /* AcpiUtGetMutexName (Index) */, Timeout, WaitStatus));
+            "mutex" /* AcpiUtGetMutexName (index) */, Timeout, waitStatus));
         return (AE_OK);
     }
 
-    AcpiGbl_Semaphores[Index].CurrentUnits -= Units;
+    AcpiGbl_Semaphores[index].CurrentUnits -= Units;
     return (AE_OK);
 }
 
