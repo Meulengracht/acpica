@@ -283,13 +283,16 @@ void
 AcpiOsSleep (
     UINT64 Milliseconds)
 {
-    clock_t unused;
     WARNING("AcpiOsSleep(Milliseconds=%llu)", Milliseconds);
-    
+
+    // If the thread sub-system is not initialized at the time of this call, then
+    // we must use different ways of stalling.
     if (ThreadCurrentForCore(ArchGetProcessorCoreId()) != NULL) {
-        SchedulerSleep(Milliseconds * NSEC_PER_MSEC, &unused);
-    }
-    else {
+        OSTimestamp_t wakeUp;
+        SystemTimerGetWallClockTime(&wakeUp);
+        OSTimestampAddNsec(&wakeUp, &wakeUp, NSEC_PER_MSEC * Milliseconds);
+        SchedulerSleep(&wakeUp);
+    } else {
         AcpiOsStall(Milliseconds * USEC_PER_MSEC);
     }
 }
