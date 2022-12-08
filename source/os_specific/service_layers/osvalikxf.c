@@ -312,8 +312,11 @@ void
 AcpiOsStall (
     UINT32                  Microseconds)
 {
+    OSTimestamp_t deadline;
     WARNING("AcpiOsStall(Microseconds=%llu)", Microseconds);
-    SystemTimerStall(Microseconds * NSEC_PER_USEC);
+    SystemTimerGetWallClockTime(&deadline);
+    OSTimestampAddNsec(&deadline, &deadline, Microseconds * NSEC_PER_USEC);
+    SystemTimerStall(&deadline);
 }
 
 /******************************************************************************
