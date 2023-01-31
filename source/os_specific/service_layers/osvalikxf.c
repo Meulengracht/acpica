@@ -491,27 +491,27 @@ AcpiOsMapMemory(
     ACPI_PHYSICAL_ADDRESS   Where,
     ACPI_SIZE               Length)
 {
-    paddr_t      physical       = (paddr_t)Where;
-    size_t       offset         = (size_t)(Where % GetMemorySpacePageSize());
-    size_t       adjustedLength = Length + offset;
-    unsigned int memoryFlags    = MAPPING_COMMIT | MAPPING_NOCACHE | MAPPING_PERSISTENT;
-    vaddr_t      result         = 0;
-    oserr_t   osStatus;
+    size_t  offset         = (size_t)(Where % GetMemorySpacePageSize());
+    size_t  adjustedLength = Length + offset;
+    vaddr_t result         = 0;
+    oserr_t oserr;
     TRACE("AcpiOsMapMemory(Where=0x%llx, Length=0x%llx)", Where, Length);
 
-    osStatus = MemorySpaceMapContiguous(
+    oserr = MemorySpaceMap(
             GetCurrentMemorySpace(),
-            &result,
-            physical,
-            adjustedLength,
-            memoryFlags,
-            MAPPING_VIRTUAL_GLOBAL
+            &(struct MemorySpaceMapOptions) {
+                .PhysicalStart = (paddr_t)Where,
+                .Length = adjustedLength,
+                .Flags = MAPPING_COMMIT | MAPPING_NOCACHE | MAPPING_PERSISTENT,
+                .PlacementFlags = MAPPING_PHYSICAL_CONTIGUOUS | MAPPING_VIRTUAL_GLOBAL
+            },
+            &result
     );
-
-    if (osStatus != OS_EOK) {
+    if (oserr != OS_EOK) {
         ERROR("Failed to map physical memory 0x%x", Where);
         return NULL;
     }
+
     TRACE("AcpiOsMapMemory returns=0x%llx", result + offset);
     return (void*)(result + offset);
 }
