@@ -35,7 +35,7 @@ add_library(libacpi
     ${SOURCES_TABLES}
     ${SOURCES_UTILITIES}
 )
-target_compile_options(libacpi PRIVATE -mno-sse -Wno-unused-const-variable)
+target_compile_options(libacpi PRIVATE $<$<STREQUAL:${VALI_ARCH},aarch64>:-mgeneral-regs-only> $<$<NOT:$<STREQUAL:${VALI_ARCH},aarch64>>:-mno-sse> -Wno-unused-const-variable)
 target_compile_definitions(libacpi PRIVATE -DACPI_LARGE_NAMESPACE_NODE -DACPI_LIBRARY -DLIBC_KERNEL -D__LIBDS_KERNEL__)
 target_include_directories(libacpi PRIVATE ../libds/include ../../kernel/include ../../boot/include ../libddk/include ../libos/include ../libc/include)
 target_include_directories(libacpi PUBLIC source/include)
