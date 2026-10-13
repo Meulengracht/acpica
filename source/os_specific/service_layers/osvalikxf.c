@@ -131,7 +131,7 @@ AcpiOsInstallInterruptHandler (
     ACPI_OSD_HANDLER        ServiceRoutine,
     void                    *Context)
 {
-    DeviceInterrupt_t ACPIInterrupt;
+    InterruptDescriptor_t ACPIInterrupt;
     int               i;
     TRACE("AcpiOsInstallInterruptHandler(0x%" PRIxIN ", 0x%" PRIxIN ")",
         ServiceRoutine, Context);
@@ -143,7 +143,7 @@ AcpiOsInstallInterruptHandler (
     
     for (i = 0; i < MAX_NUMBER_ACPI_INTS; i++) {
         if (AcpiGbl_Interrupts[i].Handler == NULL) {
-            memset(&ACPIInterrupt, 0, sizeof(DeviceInterrupt_t));
+            memset(&ACPIInterrupt, 0, sizeof(InterruptDescriptor_t));
             ACPIInterrupt.ResourceTable.Handler = (InterruptHandler_t)AcpiInterruptEntry;
         	ACPIInterrupt.Context               = &AcpiGbl_Interrupts[i];
         	ACPIInterrupt.Line                  = InterruptNumber;
