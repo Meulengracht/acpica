@@ -28,7 +28,7 @@
 #include <ddk/io.h>
 #include <semaphore.h>
 #include <memoryspace.h>
-#include <interrupts.h>
+#include <interrupts/interrupts.h>
 #include <threading.h>
 #include <scheduler.h>
 #include <debug.h>
