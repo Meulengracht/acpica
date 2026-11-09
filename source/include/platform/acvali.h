@@ -183,7 +183,15 @@ typedef struct acpi_os_semaphore_info {
 #define ACPI_REDUCED_HARDWARE 1
 #endif
 
+#if defined(__aarch64__)
+#include <arch/aarch64/cache.h>
+// ACPICA's sleep preparation requires whole-cache maintenance, not just an
+// instruction barrier. This does not supply CPU/device suspend coordination;
+// that remains a prerequisite for enabling ARM64 system sleep.
+#define ACPI_FLUSH_CPU_CACHE() Arm64FlushCpuCaches()
+#else
 #define ACPI_FLUSH_CPU_CACHE()  __asm {WBINVD}
+#endif
 
 #if defined(amd64) || defined(__amd64__)
 #define ACPI_ACQUIRE_GLOBAL_LOCK(FacsPtr, Acq)  __asm \

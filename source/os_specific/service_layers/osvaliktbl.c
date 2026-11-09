@@ -71,11 +71,15 @@ __CheckConfigurationGuid(__EFI_GUID guid)
             (__EFI_CONFIGURATION_TABLE*)GetMachine()->BootInformation.ConfigurationTable,
             GetMachine()->BootInformation.ConfigurationTableCount,
             guid);
+    
+    // Only probe the signature here. ACPICA validates the full RSDP when it
+    // follows this address; a whole-page probe could touch unrelated memory
+    // after an RSDP placed near the end of its firmware allocation.
     if (physicalAddress) {
-        void* table = AcpiOsMapMemory(physicalAddress, 0x1000);
+        void* table = AcpiOsMapMemory(physicalAddress, sizeof(ACPI_SIG_RSDP) - 1);
         if (table) {
             int valid = __IsRsdpPointer(table);
-            AcpiOsUnmapMemory(table, 0x1000);
+            AcpiOsUnmapMemory(table, sizeof(ACPI_SIG_RSDP) - 1);
             if (valid) {
                 return physicalAddress;
             }
@@ -101,8 +105,13 @@ AcpiOsGetRootPointer (
         }
     }
 
-	AcpiFindRootPointer(&physicalAddress);
-	return physicalAddress;
+#if defined(__i386__) || defined(__amd64__)
+    // The EBDA/BIOS search is meaningful only on PC platforms. ARM firmware
+    // supplies the RSDP through UEFI; scanning low physical addresses there
+    // can touch devices or addresses with no backing memory.
+    AcpiFindRootPointer(&physicalAddress);
+#endif
+    return physicalAddress;
 }
 
 /******************************************************************************
