@@ -24,6 +24,7 @@
 #include <arch/thread.h>
 #include <arch/utils.h>
 #include <arch/io.h>
+
 #include <component/timer.h>
 #include <ddk/io.h>
 #include <semaphore.h>
@@ -38,6 +39,8 @@
  * - (ACPI) System */
 #include <acpi.h>
 #include <accommon.h>
+
+extern ACPI_STATUS AcpiPciConfig(ACPI_PCI_ID*, UINT32, UINT64*, UINT32, int);
 
 /* Definitions
  * - Component Setup */
@@ -637,14 +640,7 @@ AcpiOsReadPciConfiguration (
     UINT64                  *Value,
     UINT32                  Width)
 {
-    ACPI_FUNCTION_NAME(AcpiOsReadPciConfiguration);
-    size_t InputValue;
-    if (ReadDirectPci(PciId->Bus, PciId->Device, PciId->Function, Reg, DIVUP(Width, 8), &InputValue) != OS_EOK) {
-        ACPI_ERROR((AE_INFO, "Bad width parameter: %X", Width));
-        return (AE_BAD_PARAMETER);
-    }
-    *Value = (UINT64)InputValue;
-    return (AE_OK);
+    return AcpiPciConfig(PciId, Reg, Value, Width, 0);
 }
 
 /******************************************************************************
@@ -668,13 +664,7 @@ AcpiOsWritePciConfiguration (
     UINT64                  Value,
     UINT32                  Width)
 {
-    ACPI_FUNCTION_NAME(AcpiOsWritePciConfiguration);
-    size_t OutValue = (size_t)Value;
-    if (WriteDirectPci(PciId->Bus, PciId->Device, PciId->Function, Reg, DIVUP(Width, 8), OutValue) != OS_EOK) {
-        ACPI_ERROR((AE_INFO, "Bad width parameter: %X", Width));
-        return (AE_BAD_PARAMETER);
-    }
-    return (AE_OK);
+    return AcpiPciConfig(PciId, Reg, &Value, Width, 1);
 }
 
 /******************************************************************************
